@@ -1,0 +1,125 @@
+/* background gradient - can change the colors by changing the 2 hex codes in "linear-gradient" */ 
+body {
+    background: linear-gradient(-45deg, #948E99,#2E1437, #1c0025);
+    background-size: 400% 400%;
+    animation: gradient 14s ease infinite;
+    color: #FFFFFF
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* note: '#' for id's (things that appear once), '.' to style classes (things appearing multiple times) */ 
+.title {
+    color: #FFFFFF;
+    text-align: center;
+    font-size: 56px;
+    margin-top:25px;
+    margin-bottom: 25px;
+}
+
+#map {
+    height:600px;
+    width: 60%;
+    border-radius: 25px;
+    margin-left: auto;
+	margin-right: auto;
+    margin-bottom: 15px;
+}
+/* change css of bootstrap buttons */
+.settings {
+    width: 250px;
+}
+
+.map-controls {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.form-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom:15px;
+}
+
+form input{
+    width: 225px;
+    height: 38px;
+    border-radius: 5px;
+    border-color: transparent;
+    background-color: transparent;      
+    outline: none;                  
+    color: #FFFFFF;
+}
+
+.map-info {
+    font-size:24px;
+    text-align: center;
+    align-items: center;
+    color: #FFFFFF;
+    margin-bottom: 15px;
+}
+
+.db-buttons {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+#tiny_info {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+/* make sure to add 'w-100' to the button class or it wont stretch the button to fit the div */
+.wide-button {
+    width: 765px;
+	margin-left: auto;
+	margin-right: auto;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.plots-container {
+    width:100%;
+    height: 30%;
+    margin-top: 25px;
+    margin-bottom:100px;
+    display: block;
+	margin-left: auto;
+	margin-right: auto;
+    text-align: center;
+    align-items: center;
+}
+
+.db-table {
+    width: 80%;
+    margin-top: 75px;
+    margin-bottom:75px;
+    display: block;
+	margin-left: auto;
+	margin-right: auto;
+    text-align: center;
+    align-items: center;
+    /* margin-left: auto;
+	margin-right: auto;
+    margin-bottom: 15px;
+    text-align: center; */
+}
+
+/* to change the color of the placeholder text (w3schools.com) */
+::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: #FFFFFF;
+    opacity: 1; /* Firefox */
+  }

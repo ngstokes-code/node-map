@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0">
+
+    <!-- page info here -->
+    <title>5G Map W/ Data</title>
+    <!-- Polyfill via cdn -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <!-- jQuery before everything else at the end of the body -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <!-- Bootstrap CSS via cdn -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <!-- any css we write -->
+    <link rel="stylesheet" type="text/css" href="/static/css/main.css">
+
+</head>
+
+<body>
+
+    <h1 class="title">5G Nodal Analysis Map W/ Data</h1>
+    <div id="map">
+        <!-- the map is here -->
+    </div>
+
+    <div class='map-controls'>
+        <button id="polygon-move" type="button" class="btn btn-outline-light mr-2 settings">Make Polygon
+            Movable</button>
+        <button id="polygon-stay" type="button" class="btn btn-outline-light mr-2 settings">Make Polygon
+            Stationary</button>
+        <button id="clear-markers" type="button" class="btn btn-outline-light mr-2 settings">Clear All Markers</button>
+    </div>
+
+    <div class="form-container">
+        <form class="form-inline">
+            <input type="number" id="rnode" name="inputField" placeholder="Number of Random Nodes...">
+            <button id="submit" class="btn btn-outline-light ml-2">Submit</button><br>
+            <!--<input type="submit" value="Submit">-->
+        </form>
+    </div>
+
+    <div class="map-info">
+        <div id="myLog"></div>
+        <p></p>
+        <div id="markerCnt"></div>
+        <p></p>
+        <div id="bounds"></div>
+        <p></p>
+        <div id="density"></div>
+    </div>
+
+    <script type=text/javascript>
+                    $(function() {
+                    $('a#showDatabase').on('click', function(e) {
+                        e.preventDefault()
+                        $.getJSON('/tabulate_database',
+                            function(data) {
+                            document.getElementById("table").innerHTML = data;
+                        });
+                        return false;
+                    });
+                });
+                </script>
+
+    <script type=text/javascript>
+                    $(function() {
+                    $('a#hideDatabase').on('click', function(e) {
+                        e.preventDefault()
+                        document.getElementById("table").innerHTML = ``;
+                        });
+                        return false;
+                    });
+                </script>
+
+    <script type=text/javascript>
+                    $(function() {
+                    $('a#wipeDatabase').on('click', function(e) {
+                        e.preventDefault()
+                        $.getJSON('/drop_db',
+                            function() {
+                            document.getElementById("table").innerHTML = ``;
+                        });
+                        return false;
+                    });
+                });
+                </script>
+
+    <!-- <form> -->
+    <div class="db-buttons">
+        <button id="node-positions" type="button" class="btn btn-outline-info mr-2 settings">Save Node
+            Positions</button>
+        <a href=# id=showDatabase><button type="button" class="btn btn-outline-success mr-2 settings">Show
+                Database</button></a>
+        <a href=# id=hideDatabase><button type="button" class="btn btn-outline-danger settings">Hide
+                Database</button></a>
+    </div>
+    <!-- </form> -->
+    <i><small id="tiny_info" class="form-text text-light font-weight-bold">*Nodes outside the polygon will not be saved
+            to the database</small></i>
+
+    <div class="wide-button">
+        <a href=# id=wipeDatabase><button type="button" class="btn btn-outline-danger w-100">Wipe
+                Database</button></a>
+    </div>
+
+    <!-- dropdown button to save node positions as different files -->
+    <div class="wide-button">
+        <button class="btn btn-outline-info dropdown-toggle w-100" type="button" id="dropdownMenuButton"
+            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Download Node Positions as...
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            <a class="dropdown-item" href="{{ url_for('download_db') }}">Database (.db)</a>
+            <a class="dropdown-item" href="{{ url_for('download_txt') }}">Text Document (.txt)</a>
+            <a class="dropdown-item" href="{{ url_for('download_csv') }}">Comma-Separated Values (.csv)</a>
+        </div>
+    </div>
+
+    <!-- this div will get populated by python to display a table of node coordinates -->
+    <div class="db-table" id="table"></div>
+
+    <!-- our js file -->
+    <script src="/static/js/script.js"></script>
+    <!-- Popper & Bootstrap js via cdn (jQuery at top of document. Must be in this order to work properly; jQuery, Popper, Bootstrap) -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"
+        integrity="sha384-eMNCOe7tC1doHpGoWe/6oMVemdAVTMs2xqW4mwXrXsW0L84Iytr2wi5v2QjrP/xp"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns"
+        crossorigin="anonymous"></script>
+    <!-- Google Maps API js -->
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCnwFlpxxLFuDfg7wtrEPzuJKvoaJZ6RKI&callback=createMap&libraries=geometry"
+        async defer></script>
+</body>
+
+</html>
