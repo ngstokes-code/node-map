@@ -23,13 +23,21 @@ body {
     background-color: transparent;
 }
 
-/* note: '#' for id's (things that appear once), '.' to style classes (things appearing multiple times) */ 
-.title {
-    color: #FFFFFF;
+.topology-form {
+    width:100%;
+    opacity: 90%;
+    max-width:300px;
+    margin: 15px auto 15px auto; /* top, right, bottom, left */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.error {
+    font-size: 24px;
+    color: red;
     text-align: center;
-    font-size: 56px;
-    margin-top:25px;
-    margin-bottom: 25px;
+    font-style: italic;
 }
 
 #map {
@@ -40,10 +48,6 @@ body {
 	margin-right: auto;
     margin-bottom: 15px;
 }
-/* change css of bootstrap buttons */
-.settings {
-    width: 250px;
-}
 
 .map-controls {
     display: flex;
@@ -51,22 +55,37 @@ body {
     margin-bottom: 15px;
 }
 
-.form-container {
+.form-container { /* for "submit number random nodes" */ 
     width: 100%;
     display: flex;
     justify-content: center;
     margin-bottom:15px;
 }
 
-/* form input{
-    width: 225px;
-    height: 38px;
-    border-radius: 5px;
-    border-color: transparent;
-    background-color: transparent;      
-    outline: none;                  
+.map-info {
+    font-size:24px;
+    text-align: center;
+    align-items: center;
     color: #FFFFFF;
-} */
+    margin-bottom: 15px;
+}
+
+.title {
+    color: #FFFFFF;
+    text-align: center;
+    font-size: 38px;
+    font-style: italic;
+    margin-top:25px;
+    margin-bottom: 25px;
+}
+
+.container {
+    width: 300px;
+    display: block;
+    align-items: center;
+    justify-content: center;
+    padding-bottom:25px;
+}
 
 /* search bar... auto makes it horizontally centered */
 form-inline {
@@ -76,14 +95,6 @@ form-inline {
     margin: 20px auto 20px auto;    /* left right auto for responsiveness */ 
     background-color:#ffffff;     /* color of search bar */ 
     border-radius: 15px;            /* round edges on search bar */
-}
-
-.map-info {
-    font-size:24px;
-    text-align: center;
-    align-items: center;
-    color: #FFFFFF;
-    margin-bottom: 15px;
 }
 
 .db-buttons {
@@ -106,44 +117,14 @@ form-inline {
     text-align: center;
 }
 
-.plots-container {
-    width:100%;
-    height: 30%;
-    margin-top: 25px;
-    margin-bottom:100px;
-    display: block;
-	margin-left: auto;
-	margin-right: auto;
-    text-align: center;
-    align-items: center;
-}
-
 .db-table {
     width: 80%;
-    margin-top: 75px;
-    margin-bottom:75px;
+    margin-bottom:25px;
     display: block;
 	margin-left: auto;
 	margin-right: auto;
     text-align: center;
     align-items: center;
-    /* margin-left: auto;
-	margin-right: auto;
-    margin-bottom: 15px;
-    text-align: center; */
+
 }
 
-/* to change the color of the placeholder text (w3schools.com) */
-::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
-    color: #FFFFFF;
-    opacity: 1; /* Firefox */
-  }
-
-/* Load map stuff */
-.container {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding-bottom:25px;
-}
