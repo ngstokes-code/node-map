@@ -51,6 +51,12 @@ body {
     margin-bottom: 15px;
 }
 
+.orientation-controls {
+    text-align: center;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
 .form-container {
     width: 100%;
     display: flex;

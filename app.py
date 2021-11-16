@@ -24,6 +24,10 @@ def home():
 def load():
     return render_template('load.html')
 
+@app.route('/heatmap')
+def heatmap():
+    return render_template('heatmap.html')
+
 
 @app.route('/load_error')
 def load_error(error):
@@ -181,9 +185,6 @@ def save_topology(data):
     # (nodes inside polygon) / (km^2 area of polygon)
     polygon_ndensity = data['polyDensity']
 
-
-# "basestations": entry[4],
-# "numStations":entry[5],
     # Save data to database if ID not taken
     # table name == database name (not required, just simpler)
     connection = sqlite3.connect('topologies.db')
@@ -229,8 +230,6 @@ def req_load_topology_data():
     if entry == None:
         return make_response(("ID does not exist", 404))  # 404 NOT FOUND
     return json.dumps(entry)
-    # return make_response((json.dumps(entry), 200))
-    # return make_response((json.dumps("ID does not exist"), 404))
 
 
 def load_topology(id):  # return entry w/ given ID from database
@@ -267,6 +266,48 @@ def load_topology(id):  # return entry w/ given ID from database
         }
         return format_data
     return None  # entry not present
+
+
+@app.route('/tabulate_topologies')
+def tabulate_topologies():
+    connection = sqlite3.connect('topologies.db')
+    cursor = connection.cursor()
+    cursor.execute("""CREATE TABLE IF NOT EXISTS topologies(id TEXT PRIMARY KEY, lat BLOB, lng BLOB, num_nodes INTEGER, 
+        basestations BLOB, num_stations INTEGER, polygon_coordinates BLOB, polygon_area REAL, polygon_ndensity REAL)""")
+    cursor.execute("SELECT * FROM topologies")
+    results = cursor.fetchall()
+
+    row_list = []
+    for idx, entry in enumerate(results):
+        # Entry is a tuple(id, lat, lng, ..., poly_ndensity)
+        name = entry[0]
+        num_nodes, num_basestations = entry[3], entry[5]
+        poly_area, poly_ndensity = entry[7], entry[8]
+        row = f"""<tr>
+            <th scope="row">{idx+1}</th>
+            <td>{name}</td>
+            <td>{num_nodes}</td>
+            <td>{num_basestations}</td>
+            <td>{round(poly_area, 4)} km&sup2;</td>
+            <td>{round(poly_ndensity, 4)} nodes/km&sup2;</td>
+            </tr>"""
+        row_list.append(row)
+
+    div_text = f"""
+        <button onclick="hideTable()" type="button" id="show-topologies-button" class="btn btn-outline-danger">Hide Table</button>
+        <table class="table table-striped table-dark">
+        <thead><tr>
+            <th scope="col"></th>
+            <th scope="col">ID</th>
+            <th scope="col">Node Count</th>
+            <th scope="col">Antenna Count</th>
+            <th scope="col">Polygon Area</th>
+            <th scope="col">Node Density</th>
+        </tr></thead>
+        <tbody>{''.join(row_list)}</tbody>
+        </table>"""
+
+    return jsonify(div_text)
 
 
 def print_topology_db():  # call this to print the topologies database

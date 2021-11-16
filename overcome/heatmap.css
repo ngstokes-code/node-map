@@ -1,0 +1,102 @@
+/* background gradient - can change the colors by changing the 2 hex codes in "linear-gradient" */ 
+body {
+    background: linear-gradient(-45deg, #948E99,#2E1437, #1c0025);
+    background-size: 400% 400%;
+    background-color: transparent !important;
+    animation: gradient 14s ease infinite;
+    color: #FFFFFF
+}
+
+@keyframes gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.subText {
+    text-align: center;
+    font-style: italic;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 15px;
+    max-width: 25%;
+}
+
+.title {
+    color: #FFFFFF;
+    text-align: center;
+    font-size: 56px;
+    margin-top:25px;
+    margin-bottom: 15px;
+}
+
+.container {
+    width: 300px;
+    display: block;
+    align-items: center;
+    justify-content: center;
+    padding-bottom:25px;
+}
+
+.wide-button {
+    text-align: center;
+}
+
+#estimatedRsrp {
+    font-size: 24px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    color: green;
+    text-align: center;
+    font-style: italic;
+}
+
+#pac-input {
+    /* width: 100%; */
+    opacity: 90%;
+    width: 45%;
+    height: 5%;
+    margin: 15px auto 15px auto;    /* left right auto for responsiveness */ 
+    background-color:#ffffff;     /* color of search bar */ 
+    border-radius: 5px;             /*round edges on search bar */
+    padding-left: 10px;
+}
+
+#map {
+    height:600px;
+    width: 60%;
+    border-radius: 15px;
+    margin-left: auto;
+	margin-right: auto;
+    margin-bottom: 15px;
+}
+
+#csvTable {
+    width: 60%;
+    margin-top: 50px;
+    margin-left: auto;
+    margin-right: auto;
+    display: fill;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+}
+
+#infoWindow {
+    color: black;
+}
+
+#canv{
+    position:"relative";
+    top:480px;
+    left:32%;
+    height:214px;
+    width:214px;
+    z-index:1;
+}

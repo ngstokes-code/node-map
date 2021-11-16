@@ -7,7 +7,7 @@ var stations = [];
 var markerCnt = 0;
 var ndensity = 0;
 var stationCnt = 0;
-var place_mode = 0;
+var place_mode = 1;
 document.getElementById("myLog").innerHTML = area; //"Update Polygon to show area";
 
 function createMap() {
@@ -71,6 +71,12 @@ function createMap() {
         addMarker(event.latLng);
         nodeDensity();
     });
+    document.getElementById("hide-orientation").addEventListener("click", function () {
+        hideOrientation();
+    });
+    document.getElementById("show-orientation").addEventListener("click", function () {
+        showOrientation();
+    });
     document.getElementById("clear-markers").addEventListener("click", function () {
         clearMarkers();
         ndensity = 0;
@@ -114,15 +120,33 @@ function createMap() {
 }
 //-----------Adds markers and stations manually
 function addMarker(position) {
+    var p = new google.maps.LatLng(position.lat()-.01,position.lng()-.01);
     //For Stations???????
     if( place_mode == 2){
-        const image = { url: "https://imagizer.imageshack.com/v2/512x512q90/r/924/ir66hA.png"/*"http://maps.google.com/mapfiles/kml/shapes/mechanic.png"*/,  scaledSize: new google.maps.Size(25, 25), origin: new google.maps.Point(0, 0), anchor: new google.maps.Point(0, 0)/*"http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png"*/,};
+        const image = { url: "https://imagizer.imageshack.com/v2/512x512q90/r/924/ir66hA.png"/*"http://maps.google.com/mapfiles/kml/shapes/mechanic.png"*/,  scaledSize: new google.maps.Size(25, 25), origin: new google.maps.Point(0, 0), anchor: new google.maps.Point(12.5, 12.5)/*"http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png"*/,};
+        var orientation = {
+            path: google.maps.SymbolPath.BACKWARD_OPEN_ARROW,
+            fillColor: 'red',
+            fillOpacity: .2,
+            strokeColor: 'red',
+            strokeOpacity: .8,
+            strokeWeight: 1,
+            scale: 30,
+            //scaledSize: new google.maps.Size(40, 10),
+            rotation: random_orientation()
+        }
         const marker = new google.maps.Marker({
             position,
             map,
             icon: image,
         });
+        const marker_orientation = new google.maps.Marker({
+            position,
+            map,
+            icon: orientation,
+        });
         stations.push(marker);
+        stations_orientation.push(marker_orientation);
     }
     //For Markers???????
     if( place_mode == 1){
@@ -151,6 +175,11 @@ function setMapOnAll_stations(map) {
     }
 
 }
+function setMapOnAll_stations_orientation(map) {
+    for (let i = 0; i < stations_orientation.length; i++) {
+        stations_orientation[i].setMap(map);
+    }
+}
 
 //--------------------Clear Markers and Stations
 function clearMarkers() {
@@ -165,6 +194,12 @@ function clearStations() {
     //markers = [];
     stations = [];
     document.getElementById("stationCnt").innerHTML = "# of stations inside polygon: 0";
+}
+function hideOrientation(){
+    setMapOnAll_stations_orientation(null);
+}
+function showOrientation(){
+    setMapOnAll_stations_orientation(map);
 }
 //---------------------Marker Locations
 function PolyArray(array) {
@@ -254,4 +289,9 @@ function markerPositions() {
     markerPos = JSON.stringify(markerPos);
 
     $.post("receiver", markerPos);
+}
+function random_orientation(){
+    min = Math.ceil(-180);
+    max = Math.floor(180);
+    return Math.floor(Math.random() * (max - min + 1) + min);
 }

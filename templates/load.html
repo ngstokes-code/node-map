@@ -32,7 +32,10 @@
           <a class="nav-link" href="/">Build Topologies</a>
         </li>
         <li class="nav-item active">
-          <a class="nav-link" href="load">Load Topologies<span class="sr-only">(current)</span></a>
+          <a class="nav-link" href="load">Build & Load Topologies<span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="heatmap">CSV to Heatmap</a>
         </li>
       </ul>
     </div>
@@ -54,6 +57,27 @@
       <button onclick="loadData()" type="button" class="btn btn-outline-light mt-2">Load Topology</button>
     </form>
   </div>
+
+  <!-- show summary of topologies in database -->
+  <a href=# id=show-topologies style="text-decoration: none;">
+    <button type="button" id="show-topologies-button" class="btn btn-outline-light mt-2">Show Existing
+      Topologies</button>
+  </a>
+  <!-- div below gets populated with summaries -->
+  <div id="topologies-table"></div>
+
+  <script type=text/javascript>
+    $(function() {
+    $('a#show-topologies').on('click', function(e) {
+        e.preventDefault()
+        $.getJSON('/tabulate_topologies',
+            function(data) {
+            document.getElementById("topologies-table").innerHTML = data;
+        });
+        return false;
+    });
+  });
+  </script>
 
   <strong>
     <p id='error' class=error>

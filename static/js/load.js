@@ -6,7 +6,7 @@ var markerCnt = 0,
     markers = [],
     stations = [],
     vertices = [],
-    place_mode = 0,
+    place_mode = 1,
     area = "<i>update polygon to show area</i>";
 document.getElementById("myLog").innerHTML = area; // "update Polygon to show area";
 
@@ -62,9 +62,11 @@ async function parseFile(file) { // add 'or' for CSV and TXT? not sure if upper/
 }
 
 async function placeMarkers(parsedCoordinates) {
-    const markerIcon = { url: "http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png", 
-                    scaledSize: new google.maps.Size(20, 20), };
-
+    const markerIcon = {
+        url: "https://maps.google.com/mapfiles/kml/shapes/placemark_circle.png",
+        scaledSize: new google.maps.Size(20, 20),
+    };
+    var infoWindow = new google.maps.InfoWindow();
     for (let i = 0; i < parsedCoordinates.length; i++) {
         let latLng = parsedCoordinates[i];
         var marker = new google.maps.Marker({
@@ -72,23 +74,38 @@ async function placeMarkers(parsedCoordinates) {
             map: map,
             icon: markerIcon,
         });
+        // Create a property 'content' to marker object, then use this.content in event handler
+        marker.content = `<div id="infoWindow"><b>Latitude:</b> ${latLng.lat}<br />
+        <b>Longitude:</b> ${latLng.lng}<br /></div>`;
+        google.maps.event.addListener(marker, 'click', function () {
+            infoWindow.setContent(this.content);
+            infoWindow.open(this.getMap(), this);
+        });
         markers.push(marker);
     }
 }
 
 async function placeStations(parsedStations) {
-    /*"http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png"*/
-    const basestationIcon = { url: "https://imagizer.imageshack.com/v2/512x512q90/r/924/ir66hA.png", 
-                        scaledSize: new google.maps.Size(25, 25), 
-                        origin: new google.maps.Point(0, 0), 
-                        anchor: new google.maps.Point(0, 0), };
-
+    /*"https://maps.google.com/mapfiles/kml/shapes/placemark_circle.png"*/
+    const basestationIcon = {
+        url: "https://imagizer.imageshack.com/v2/512x512q90/r/924/ir66hA.png",
+        scaledSize: new google.maps.Size(25, 25),
+        origin: new google.maps.Point(0, 0),
+        anchor: new google.maps.Point(0, 0),
+    };
+    var infoWindow = new google.maps.InfoWindow();
     for (let i = 0; i < parsedStations.length; i++) {
         let latLng = parsedStations[i];
         var station = new google.maps.Marker({
             position: latLng,
             map: map,
             icon: basestationIcon,
+        });
+        station.content = `<div id="infoWindow"><b>Latitude:</b> ${latLng.lat}<br />
+        <b>Longitude:</b> ${latLng.lng}<br /></div>`;
+        google.maps.event.addListener(station, 'click', function () {
+            infoWindow.setContent(this.content);
+            infoWindow.open(this.getMap(), this);
         });
         stations.push(station);
     }
@@ -132,6 +149,7 @@ function createMap() { // pretty much the same as Tosin's
 
 
     google.maps.event.addListener(polygon.getPath(), 'set_at', function () {
+        // console.log("set_at")
         PolyArray(polygon.getPath());
         // area = google.maps.geometry.spherical.computeArea(polygon.getPath()); // not sure why this is here
         var kmarea = parseFloat(google.maps.geometry.spherical.computeArea(polygon.getPath())) * (.000001);
@@ -143,6 +161,7 @@ function createMap() { // pretty much the same as Tosin's
     });
 
     google.maps.event.addListener(polygon.getPath(), 'insert_at', function () {
+        // console.log("insert_at")
         PolyArray(polygon.getPath());
         area = google.maps.geometry.spherical.computeArea(polygon.getPath());
         var kmarea = parseFloat(google.maps.geometry.spherical.computeArea(polygon.getPath())) * (.000001);
@@ -205,27 +224,36 @@ $(document).ready(function () { createMap(); }); // A little redundant (?), but 
 //-----------Adds markers and stations manually
 function addMarker(position) {
     //For Stations???????
+    var infoWindow = new google.maps.InfoWindow();
+    var marker = new google.maps.Marker({
+        position,
+        map,
+    });
+    marker.content = `<div id="infoWindow"><b>Latitude:</b> ${position.lat()}<br />
+    <b>Longitude:</b> ${position.lng()}<br /></div>`;
+
+    google.maps.event.addListener(marker, 'click', function () {
+        infoWindow.setContent(this.content);
+        infoWindow.open(this.getMap(), this);
+    });
+
     if (place_mode == 2) {
-        const image = { url: "https://imagizer.imageshack.com/v2/512x512q90/r/924/ir66hA.png",  
-        scaledSize: new google.maps.Size(25, 25), 
-        origin: new google.maps.Point(0, 0), 
-        anchor: new google.maps.Point(0, 0) };
-        const marker = new google.maps.Marker({
-            position,
-            map,
-            icon: image,
-        });
+        const image = {
+            url: "https://imagizer.imageshack.com/v2/512x512q90/r/924/ir66hA.png",
+            scaledSize: new google.maps.Size(25, 25),
+            origin: new google.maps.Point(0, 0),
+            anchor: new google.maps.Point(0, 0)
+        };
+        marker.setIcon(image)
         stations.push(marker);
     }
     //For Markers???????
     if (place_mode == 1) {
-        const image = { url: "http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png", 
-        scaledSize: new google.maps.Size(20, 20) };
-        const marker = new google.maps.Marker({
-            position,
-            map,
-            icon: image,
-        });
+        const image = {
+            url: "https://maps.google.com/mapfiles/kml/shapes/placemark_circle.png",
+            scaledSize: new google.maps.Size(20, 20)
+        };
+        marker.setIcon(image)
         markers.push(marker);
     }
     countMarkersInPolygon();
@@ -295,7 +323,7 @@ function countStationsInPolygon() {
 async function randomMarkers() {
     clearMarkers();
     countMarkersInPolygon();
-    const image = { url: "http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png", scaledSize: new google.maps.Size(20, 20),};
+    const image = { url: "https://maps.google.com/mapfiles/kml/shapes/placemark_circle.png", scaledSize: new google.maps.Size(20, 20), };
     var bounds = new google.maps.LatLngBounds();
     for (var i = 0; i < polygon.getPath().getLength(); i++) {
         bounds.extend(polygon.getPath().getAt(i));
@@ -309,7 +337,7 @@ async function randomMarkers() {
         if (google.maps.geometry.poly.containsLocation(point, polygon) && getRandomInput() > 0) {
             var markerz = new google.maps.Marker({ position: point, map: map, icon: image, });
             markers.push(markerz);
-            if (i && i % 500 == 0){
+            if (i && i % 500 == 0) {
                 await new Promise(r => setTimeout(r, 750));
             }
             if (markers.length == getRandomInput()) {
@@ -413,15 +441,15 @@ function loadData() { /* send ID to python, python will send info back, then js 
             for (let i = 0; i < lat.length; i++) { /* or lng.length */
                 parsedCoordinates.push(
                     { lat: lat[i], lng: lng[i] }
-                )
+                );
             }
 
             if (polyCoords.length != 0) {
-                let newPath = [];
-                for (let i = 0; i < polyCoords.length; i++) {
-                    newPath.push(polyCoords[i]);
-                }
-                polygon.setPath(newPath);
+                // let newPath = [];
+                // for (let i = 0; i < polyCoords.length; i++) {
+                //     newPath.push(polyCoords[i]);
+                // };
+                polygon.setPath(polyCoords);
             } else {
                 polygon.setPath(defaultPolygon());
             }
@@ -442,6 +470,10 @@ function loadData() { /* send ID to python, python will send info back, then js 
         }
     });
 
+}
+
+function hideTable() {
+    $('#topologies-table').empty(); // get id 'topologies-table' and clear its innerHTML 
 }
 
 function updateMapInfo(polygonArea, polygonDensity) {
