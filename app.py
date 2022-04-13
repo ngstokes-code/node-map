@@ -1,228 +1,181 @@
-# flask imports
-from flask import Flask, flash, send_file, json, jsonify, render_template, request, redirect, Response, make_response
-import threading  # for mutex
-import csv       # to read / write csv files
+from topology import (
+    Topology,
+    Polygon,
+    create_ue_list,
+    create_enb_list,
+    create_coordinates,
+)
+from typing import List, Tuple, Dict
+from flask import (
+    Flask,
+    send_file,
+    json,
+    jsonify,
+    render_template,
+    request,
+    make_response,
+)
+import csv  # to read / write csv files
 import sqlite3
-from flask.helpers import url_for   # database library
 
-from werkzeug.utils import secure_filename
-from werkzeug.wrappers import response
 
 app = Flask(__name__)
 # app.secret_key = 'asdjp12319c0asdklanc'
 
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
-ALLOWED_EXTENSIONS = {'txt', 'csv'}
+app.config["UPLOAD_FOLDER"] = "static/uploads"
+ALLOWED_EXTENSIONS = {"txt", "csv"}
+
+# If you want to use functions within jinja templating, define them here
+@app.context_processor
+def utility_processor():
+    def myround(num: float, decimals: int):
+        return round(num, decimals)
+
+    return dict(myround=myround)
 
 
-@app.route('/')
+@app.route("/")
 def home():
-    return render_template('index.html')
+    return render_template("index.html")
 
 
-@app.route('/load')
-def load():
-    return render_template('load.html')
-
-@app.route('/heatmap')
-def heatmap():
-    return render_template('heatmap.html')
-
-
-@app.route('/load_error')
+@app.route("/load_error")
 def load_error(error):
-    return render_template('load.html', error=error)
+    return render_template("index.html", error=error)
 
 
-@app.route('/receiver', methods=['GET', 'POST'])
+@app.route("/receiver", methods=["GET", "POST"])
 def get_node_data():
-    if request.method == 'POST':
+    if request.method == "POST":
         data = request.get_json(force=True)
         drop_table()  # don't want to incrementally add nodes to database
         lat, lng = data[0], data[1]  # list[float] of lat / lng coordinates
-        connection = sqlite3.connect('coords.db')
+        connection = sqlite3.connect("coords.db")
         cursor = connection.cursor()
-        cursor.execute(
-            "CREATE TABLE IF NOT EXISTS coordinates(lat REAL, lng REAL)")
+        cursor.execute("CREATE TABLE IF NOT EXISTS coordinates(lat REAL, lng REAL)")
 
         for lat, lng in zip(lat, lng):
-            cursor.execute(
-                "INSERT INTO coordinates VALUES ({}, {})".format(lat, lng))
+            cursor.execute("INSERT INTO coordinates VALUES ({}, {})".format(lat, lng))
 
         connection.commit()
 
-    return "success"
+    return "200 OK"
 
 
-@app.route('/tabulate_database')
+@app.route("/tabulate_database", methods=["GET", "POST"])
 def tabulate_database():
-    connection = sqlite3.connect('coords.db')
+    connection = sqlite3.connect("coords.db")
     cursor = connection.cursor()
-    cursor.execute(
-        "CREATE TABLE IF NOT EXISTS coordinates(lat REAL, lng REAL)")
-    # asterisk (*) --> everything in the database
-    cursor.execute("SELECT * FROM coordinates")
+    cursor.execute("CREATE TABLE IF NOT EXISTS coordinates(lat REAL, lng REAL)")
+    cursor.execute("SELECT * FROM coordinates")  # grab entire db
     results = cursor.fetchall()  # list of tuple(lat, lng)
-
-    row_list = []  # strings are immutable in python, instead we use a list to avoid changing an immutable string
-    for idx, coordinate in enumerate(results):
-        row = """
-            <tr>
-                <th scope="row">{num}</th>
-                <td>{lat}</td>
-                <td>{lon}</td>
-            </tr>
-                """.format(num=(idx+1), lat=coordinate[0], lon=coordinate[1])
-        row_list.append(row)
-
-    div_text = """
-        <table class="table table-striped table-dark">
-            <thead>
-              <tr>
-                <th scope="col">Node #</th>
-                <th scope="col">Latitude</th>
-                <th scope="col">Longitude</th>
-              </tr>
-            </thead>
-            <tbody>
-            {row_text}
-            </tbody>
-        </table>
-                """.format(row_text='\n'.join(row_list))
-
-    return jsonify(div_text)
+    return render_template("index.html", db_table_info=results)
 
 
-@app.route('/drop_db')
+@app.route("/drop_db")
 def drop_table():
-    print("dropping database table")
-    connection = sqlite3.connect('coords.db')
+    connection = sqlite3.connect("coords.db")
     cursor = connection.cursor()
     cursor.execute("DROP TABLE IF EXISTS coordinates")
     connection.commit()
-    # wipe database and return index.html render template
-    # return render_template('index.html')
-    return "success"
+    return "200 OK"  # wipe database and return success
 
 
-@app.route('/download_db')
+@app.route("/download_db")
 def download_db():
-    return send_file('coords.db', as_attachment=True, download_name="node-positions.db")
+    return send_file("coords.db", as_attachment=True, download_name="node-positions.db")
 
 
-@app.route('/download_txt')
+@app.route("/download_txt")
 def download_txt():
     # return send_file('coords.txt', as_attachment=True)
-    connection = sqlite3.connect('coords.db')
+    connection = sqlite3.connect("coords.db")
     cursor = connection.cursor()
-    cursor.execute(
-        "CREATE TABLE IF NOT EXISTS coordinates(lat REAL, lng REAL)")
+    cursor.execute("CREATE TABLE IF NOT EXISTS coordinates(lat REAL, lng REAL)")
     # asterisk (*) --> everything in the database
     cursor.execute("SELECT * FROM coordinates")
     results = cursor.fetchall()  # list of tuple(lat, lng)
 
     # Write the coordinates to a text file. I could've looped over and written line by line but this is faster I think
-    coords_to_string = '\n'.join(
-        map(lambda i: str(i[0]) + ', ' + str(i[1]), results))
+    coords_to_string = "\n".join(map(lambda i: str(i[0]) + ", " + str(i[1]), results))
     file = open("node-positions.txt", "w+")  # open (create) a writable file
     file.write(f"Latitude, Longitude\n{coords_to_string}")  # write to the file
     file.close()
 
-    return send_file('node-positions.txt', as_attachment=True)
+    return send_file("node-positions.txt", as_attachment=True)
 
 
-@app.route('/download_csv')
+@app.route("/download_csv")
 def download_csv():
-    connection = sqlite3.connect('coords.db')
+    connection = sqlite3.connect("coords.db")
     cursor = connection.cursor()
-    cursor.execute(
-        "CREATE TABLE IF NOT EXISTS coordinates(lat REAL, lng REAL)")
+    cursor.execute("CREATE TABLE IF NOT EXISTS coordinates(lat REAL, lng REAL)")
     # asterisk (*) --> everything in the database
     cursor.execute("SELECT * FROM coordinates")
     results = cursor.fetchall()  # list of tuple(lat, lng)
 
-    with open('node-positions.csv', 'w') as f:
-        writer = csv.writer(f, lineterminator='\n')
+    with open("node-positions.csv", "w") as f:
+        writer = csv.writer(f, lineterminator="\n")
         # If you try to write a string, every character will be a different column. List -> every index is a column
-        writer.writerow(['Latitude', 'Longitude'])
+        writer.writerow(["Latitude", "Longitude"])
         for tup in results:
             writer.writerow(tup)
 
-    return send_file('node-positions.csv', as_attachment=True)
+    return send_file("node-positions.csv", as_attachment=True)
 
 
-# mutex = threading.Lock()
-@app.route('/saveTopologyData', methods=['POST'])
+@app.route("/saveTopologyData", methods=["POST"])
 def req_save_topology_data():  # called when user wants to SAVE topology data
-    # mutex.acquire()
     error = ""
     data = request.get_json(force=True)
-    topology_id = data['id']    # Must check validity of 'topology_id'...
-    if not topology_id.isalnum():   # Invalid ID submitted by user, returning here before DB insert
+    topology_id = data["id"]  # Must check validity of 'topology_id'...
+    # Invalid ID submitted by user, returning here before DB insert
+    if not topology_id.isalnum():
         error = "invalid ID (alphanumeric characters only)"
-    else:
-        error = save_topology(data)  # inserts data
-    # mutex.release()
-    # This is being sent back to JS, so render_template wont do anything. (No way around it)
-    return error
+        return error
+
+    return save_topology(data)  # inserts data and return error msg (blank if no errors)
 
 
-# To explain the database structure for future developers;
-# The datatype BLOB is an unspecified type, but we're storing strings there (hence the single quotes).
-# This is because they are JSON STRINGS, so when we fetch the data we just decode the JSON and we have the actual datatype (list, etc)
-# Returns whether or not there was an error, inserts topology if no error
-def save_topology(data):
-    # Must parse the data, impossible to query the db as json (for future search feature)
-    topology_id = data['id']  # requested ID to save as
-    lat, lng = data['coordinates']  # list of [[lat], [lng]] -> unpack them
-    # total number of nodes (inside and outside polygon, ALL nodes)
-    num_nodes = data['numNodes']
-    basestations = data['stations']
-    num_stations = data['numStations']
-    # coordinates of polygon corners (empty if polygon unchanged)
-    polygon_coordinates = data['polyCoords']
-    polygon_area = data['polyArea']  # area (km^2) of polygon
-    # (nodes inside polygon) / (km^2 area of polygon)
-    polygon_ndensity = data['polyDensity']
+def save_topology(data: dict):
+    topology_id = data["id"]
+    ue_list = create_ue_list(data["coordinates"])
+    enb_list = create_enb_list(data["stations"])
+    polygon_coordinates = create_coordinates(data["polyCoords"])
+    polygon_area = data["polyArea"]
+    polygon_ndensity = data["polyDensity"]
 
-    # Save data to database if ID not taken
-    # table name == database name (not required, just simpler)
-    connection = sqlite3.connect('topologies.db')
+    polygon = Polygon(polygon_coordinates, polygon_area, polygon_ndensity)
+    topology = Topology(topology_id, ue_list, enb_list, polygon)
+
+    connection = sqlite3.connect("topologies.db")
     cursor = connection.cursor()
-
     create_table = """CREATE TABLE IF NOT EXISTS topologies(
-        id TEXT PRIMARY KEY, 
-        lat BLOB, lng BLOB, 
-        num_nodes INTEGER, 
-        basestations BLOB, 
-        num_stations INTEGER, 
-        polygon_coordinates BLOB, 
-        polygon_area REAL, 
-        polygon_ndensity REAL)"""
+            id TEXT PRIMARY KEY, 
+            topology LONGBLOB)"""  # LONGBLOB -> up to 4gb
     cursor.execute(create_table)
 
-    check_id = """SELECT id FROM topologies WHERE id='{}'""".format(
-        topology_id)
-    cursor.execute(check_id)
+    check_id = "SELECT id FROM topologies WHERE id=( ? )"
+    cursor.execute(check_id, (topology_id,))  # prepared statements -> no SQL injection
     entry = cursor.fetchall()
-    error = ""
     if bool(entry):  # list not empty --> database found existing ID
-        error = "ID already taken"
-    else:
-        print("Inserting into database")
-        insert_data = """INSERT INTO topologies VALUES ('{}', '{}', '{}', {}, '{}', {}, '{}', {}, {})""".format(topology_id, json.dumps(
-            lat), json.dumps(lng), num_nodes, json.dumps(basestations), num_stations, json.dumps(polygon_coordinates), polygon_area, polygon_ndensity)
-        cursor.execute(insert_data)
-        connection.commit()  # save changes
+        return "ID already taken"  # return the error msg
 
-    return error
+    print("Inserting into database")
+    insert = "INSERT INTO topologies (id, topology) VALUES (?, ?)"
+    cursor.execute(insert, (topology_id, topology.toJson()))
+    connection.commit()  # save changes
+
+    return ""  # no error, return empty str
 
 
-@app.route('/loadTopologyData', methods=['POST'])
+@app.route("/loadTopologyData", methods=["POST"])
 def req_load_topology_data():
     data = request.get_json(force=True)
-    topology_id = data['id']    # Must check validity of 'topology_id'...
-    if not topology_id.isalnum():   # Invalid ID submitted by user, returning here before DB insert
+    topology_id = data["id"]  # Must check validity of 'topology_id'...
+    if (
+        not topology_id.isalnum()
+    ):  # Invalid ID submitted by user, returning here before DB insert
         # 400 BAD REQUEST
         return make_response(("Invalid ID (alphanumeric characters only)", 400))
     # tuple(error, data) containing data if there is no error
@@ -232,98 +185,90 @@ def req_load_topology_data():
     return json.dumps(entry)
 
 
-def load_topology(id):  # return entry w/ given ID from database
+def load_topology(topology_id: str):  # return entry w/ given ID from database
     # table name = database name (not required, just simpler)
-    connection = sqlite3.connect('topologies.db')
+    connection = sqlite3.connect("topologies.db")
     cursor = connection.cursor()
 
     create_table = """CREATE TABLE IF NOT EXISTS topologies(
         id TEXT PRIMARY KEY, 
-        lat BLOB, lng BLOB, 
-        num_nodes INTEGER,
-        basestations BLOB,
-        num_stations INTEGER, 
-        polygon_coordinates BLOB, 
-        polygon_area REAL, 
-        polygon_ndensity REAL)"""
+        topology LONGBLOB)"""  # LONGBLOB -> up to 4gb
     cursor.execute(create_table)
 
-    check_id = """SELECT * FROM topologies WHERE id='{}'""".format(id)
-    cursor.execute(check_id)
+    check_id = "SELECT * FROM topologies WHERE id=( ? )"
+    cursor.execute(check_id, (topology_id,))  # prepared statements -> no SQL injection
     entry = cursor.fetchall()
     if bool(entry):  # entry found
-        entry = entry[0]
-        format_data = {
-            "id": entry[0],
-            "lat": entry[1],
-            "lng": entry[2],
-            "numNodes": entry[3],
-            "basestations": entry[4],
-            "numStations": entry[5],
-            "polyCoords": entry[6],
-            "polyArea": entry[7],
-            "polyDensity": entry[8]
-        }
-        return format_data
+        topology_id, topology = entry[0]
+        data = {"id": topology_id, "topology": topology}
+        return data
     return None  # entry not present
 
 
-@app.route('/tabulate_topologies')
+@app.route("/tabulate_topologies", methods=["GET", "POST"])
 def tabulate_topologies():
-    connection = sqlite3.connect('topologies.db')
+    connection = sqlite3.connect("topologies.db")
     cursor = connection.cursor()
-    cursor.execute("""CREATE TABLE IF NOT EXISTS topologies(id TEXT PRIMARY KEY, lat BLOB, lng BLOB, num_nodes INTEGER, 
-        basestations BLOB, num_stations INTEGER, polygon_coordinates BLOB, polygon_area REAL, polygon_ndensity REAL)""")
+    cursor.execute(
+        "CREATE TABLE IF NOT EXISTS topologies(id TEXT PRIMARY KEY, topology LONGBLOB)"
+    )
     cursor.execute("SELECT * FROM topologies")
     results = cursor.fetchall()
+    topology_summaries = generate_table(results)
+    return jsonify(topology_summaries)
 
-    row_list = []
-    for idx, entry in enumerate(results):
-        # Entry is a tuple(id, lat, lng, ..., poly_ndensity)
-        name = entry[0]
-        num_nodes, num_basestations = entry[3], entry[5]
-        poly_area, poly_ndensity = entry[7], entry[8]
-        row = f"""<tr>
-            <th scope="row">{idx+1}</th>
-            <td>{name}</td>
-            <td>{num_nodes}</td>
-            <td>{num_basestations}</td>
-            <td>{round(poly_area, 4)} km&sup2;</td>
-            <td>{round(poly_ndensity, 4)} nodes/km&sup2;</td>
-            </tr>"""
-        row_list.append(row)
 
-    div_text = f"""
-        <button onclick="hideTable()" type="button" id="show-topologies-button" class="btn btn-outline-danger">Hide Table</button>
+def generate_table(results: List[Tuple]) -> str:
+    lines = [  # str's immutable, use list(str) for now
+        """<button onclick="hideTable()" type="button" id="show-topologies-button" 
+            class="btn btn-outline-danger">Hide Table</button>""",
+        """
         <table class="table table-striped table-dark">
-        <thead><tr>
-            <th scope="col"></th>
-            <th scope="col">ID</th>
-            <th scope="col">Node Count</th>
-            <th scope="col">Antenna Count</th>
-            <th scope="col">Polygon Area</th>
-            <th scope="col">Node Density</th>
-        </tr></thead>
-        <tbody>{''.join(row_list)}</tbody>
-        </table>"""
+            <thead>
+                <tr>
+                    <th scope="col"></th>
+                    <th scope="col">ID</th>
+                    <th scope="col">Node Count</th>
+                    <th scope="col">Antenna Count</th>
+                    <th scope="col">Polygon Area</th>
+                    <th scope="col">Node Density</th>
+                </tr>
+            </thead>
+            <tbody>
+        """,
+    ]
+    for idx, (t_id, topology) in enumerate(results):
+        t = json.loads(topology)
+        polygon = json.loads(t["polygon"])
+        lines.append(
+            f"""
+                <tr>
+                    <th scope="row">{idx+1}</th>
+                    <td>{t_id}</td> <!-- name -->
+                    <td>{len(t['UEs'])}</td> <!-- num_nodes -->
+                    <td>{len(t['eNBs'])}</td> <!-- num_basestations -->
+                    <td>{round(polygon['area'], 4)} km&sup2;</td> <!-- polygon area -->
+                    <td>{round(polygon['ndensity'], 4)} nodes/km&sup2;</td> <!-- polygon density -->
+                </tr>
+        """
+        )
 
-    return jsonify(div_text)
+    lines.append(
+        """
+            </tbody>
+        </table>
+    """
+    )
+    return "".join(lines)
 
 
 def print_topology_db():  # call this to print the topologies database
-    # table name = database name (not required, just simpler)
-    connection = sqlite3.connect('topologies.db')
+    connection = sqlite3.connect("topologies.db")
     cursor = connection.cursor()
 
     create_table = """CREATE TABLE IF NOT EXISTS topologies(
         id TEXT PRIMARY KEY, 
-        lat BLOB, lng BLOB, 
-        num_nodes INTEGER, 
-        basestations BLOB, 
-        num_stations INTEGER, 
-        polygon_coordinates BLOB, 
-        polygon_area REAL, 
-        polygon_ndensity REAL)"""
+        topology LONGBLOB)"""
     cursor.execute(create_table)
 
     cursor.execute("SELECT * FROM topologies")
@@ -331,14 +276,5 @@ def print_topology_db():  # call this to print the topologies database
     print(results)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
-
-# Old DB print statements
-# print(f'ID: {topology_id},\nlat: {lat},\nlng: {lng},\nnum_nodes: {num_nodes},\npoly_coords: {polygon_coordinates},\npoly_area: {polygon_area},\npoly_ndensity: {polygon_ndensity}')
-# print(f"lat: {type(json.dumps(lat))}")
-# print(f"lng: {type(json.dumps(lng))}")
-# print(f"num_nodes: {type(num_nodes)}")
-# print(f"polyCoords: {type(json.dumps(polygon_coordinates))}")
-# print(f"polyArea: {type(polygon_area)}")
-# print(f"polyNdensity: {type(polygon_ndensity)}")

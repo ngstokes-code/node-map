@@ -19,6 +19,84 @@ body {
     }
 }
 
+h1 {
+    font-size: 56px;
+}
+
+hr {
+    border: none;
+    height: 2px;
+    color: white; /* old IE */
+    background-color: white; /* Modern Browsers */
+}
+
+#jsonModal {
+    color: black;
+    font-size: 18;
+    text-align: left;
+}
+
+#jsonSubmissionResponse {
+    font-size: 24px;
+    color: white;
+    text-align: center;
+    font-style: italic;
+}
+
+/* The following CSS is to have 3 columns with radios to pair entries */ 
+#jsonRadioGroup {
+    width: 80%;
+    margin-left: 10%;
+    margin-right: 10%;
+    text-align: center;
+}
+
+.alignLeft {
+    text-align: left;
+    display:inline-block;
+}
+
+/* label tags were adding weird spacing (margin-bottom), so I overwrite it here */
+.alignLeft label { 
+    margin: 0px;
+}
+
+.column-left {
+    float: left;
+    width: 33.333%;
+}
+  
+.column-right {
+    float: right;
+    width: 33.333%;
+}
+  
+.column-center {
+    display: inline-block;
+    width: 33.333%;
+}
+
+/* end of column/radio css */
+
+#dbModal {
+    color: black;
+    font-size: 18;
+    text-align: left;
+}
+
+.instructions_button {
+    opacity: .9;
+    font-size: 24px;
+    color: white;
+    border: 0px solid white; /* Green */
+    background-color: transparent;
+    padding-bottom: 8px;
+}
+
+.instructions_button:hover {
+    background-color: #948E99;
+  }
+
 .navbar{
     background-color: transparent;
 }
@@ -32,6 +110,15 @@ body {
     justify-content: center;
 }
 
+#show-topologies {  /* show topologies button */
+    width:100%;
+    opacity: 90%;
+    max-width:265px;
+    justify-content: center;
+    display: flex;
+    margin: 0px auto 15px auto; /* top, right, bottom, left */
+}
+
 #show-topologies-button {
     width:100%;
     opacity: 90%;
@@ -39,6 +126,15 @@ body {
     justify-content: center;
     display: flex;
     margin: 15px auto 15px auto; /* top, right, bottom, left */
+}
+
+#hide-topologies {
+    width:100%;
+    opacity: 90%;
+    max-width:265px;
+    justify-content: center;
+    display: flex;
+    margin: 0px auto 15px auto; /* top, right, bottom, left */
 }
 
 #topologies-table {
@@ -64,6 +160,12 @@ body {
     border-radius: 25px;
     margin-left: auto;
 	margin-right: auto;
+    margin-bottom: 15px;
+}
+
+.orientation-controls {
+    text-align: center;
+    justify-content: center;
     margin-bottom: 15px;
 }
 
@@ -97,12 +199,21 @@ body {
     margin-bottom: 25px;
 }
 
+.title-small {
+    color: #FFFFFF;
+    text-align: center;
+    font-size: 24px;
+    font-style: italic;
+    margin-top:25px;
+    margin-bottom: 25px;
+}
+
 .container {
     width: 300px;
     display: block;
     align-items: center;
     justify-content: center;
-    padding-bottom:25px;
+    /* padding-bottom:12px; */
 }
 
 /* search bar... auto makes it horizontally centered */
