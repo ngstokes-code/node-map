@@ -22,7 +22,6 @@ from flaskext.mysql import MySQL  # for MySQL conversion
 
 
 app = Flask(__name__)
-# app.secret_key = 'asdjp12319c0asdklanc'
 # mysql://bf40c7d1cf4912:97282e7e@us-cdbr-east-05.cleardb.net/heroku_295912fa9fe00a3?reconnect=true
 # for MySQL conversion
 mysql = MySQL()
