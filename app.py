@@ -18,9 +18,22 @@ from flask import (
 import csv  # to read / write csv files
 import sqlite3
 
+from flaskext.mysql import MySQL  # for MySQL conversion
+
 
 app = Flask(__name__)
 # app.secret_key = 'asdjp12319c0asdklanc'
+
+# for MySQL conversion
+mysql = MySQL()
+app.config['MYSQL_DATABASE_USER'] = 'root'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'cse312homework'
+app.config['MYSQL_DATABASE_DB'] = 'cse312_database'
+app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+mysql.init_app(app)
+connection = mysql.connect()
+# cursor = connection.cursor()
+
 
 app.config["UPLOAD_FOLDER"] = "static/uploads"
 ALLOWED_EXTENSIONS = {"txt", "csv"}
@@ -46,38 +59,39 @@ def load_error(error):
 
 @app.route("/receiver", methods=["GET", "POST"])
 def get_node_data():
-    if request.method == "POST":
-        data = request.get_json(force=True)
-        drop_table()  # don't want to incrementally add nodes to database
-        lat, lng = data[0], data[1]  # list[float] of lat / lng coordinates
-        connection = sqlite3.connect("coords.db")
-        cursor = connection.cursor()
-        cursor.execute("CREATE TABLE IF NOT EXISTS coordinates(lat REAL, lng REAL)")
+    # if request.method == "POST":
+    #     data = request.get_json(force=True)
+    #     drop_table()  # don't want to incrementally add nodes to database
+    #     lat, lng = data[0], data[1]  # list[float] of lat / lng coordinates
+    #     # connection = sqlite3.connect("coords.db")
+    #     cursor = connection.cursor()
+    #     cursor.execute("CREATE TABLE IF NOT EXISTS coordinates(lat REAL, lng REAL)")
 
-        for lat, lng in zip(lat, lng):
-            cursor.execute("INSERT INTO coordinates VALUES ({}, {})".format(lat, lng))
+    #     for lat, lng in zip(lat, lng):
+    #         cursor.execute("INSERT INTO coordinates VALUES ({}, {})".format(lat, lng))
 
-        connection.commit()
+    #     connection.commit()
 
     return "200 OK"
 
 
 @app.route("/tabulate_database", methods=["GET", "POST"])
 def tabulate_database():
-    connection = sqlite3.connect("coords.db")
-    cursor = connection.cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS coordinates(lat REAL, lng REAL)")
-    cursor.execute("SELECT * FROM coordinates")  # grab entire db
-    results = cursor.fetchall()  # list of tuple(lat, lng)
+    # connection = sqlite3.connect("coords.db")
+    # cursor = connection.cursor()
+    # cursor.execute("CREATE TABLE IF NOT EXISTS coordinates(lat REAL, lng REAL)")
+    # cursor.execute("SELECT * FROM coordinates")  # grab entire db
+    # results = cursor.fetchall()  # list of tuple(lat, lng)
+    results = []
     return render_template("index.html", db_table_info=results)
 
 
 @app.route("/drop_db")
 def drop_table():
-    connection = sqlite3.connect("coords.db")
-    cursor = connection.cursor()
-    cursor.execute("DROP TABLE IF EXISTS coordinates")
-    connection.commit()
+    # connection = sqlite3.connect("coords.db")
+    # cursor = connection.cursor()
+    # cursor.execute("DROP TABLE IF EXISTS coordinates")
+    # connection.commit()
     return "200 OK"  # wipe database and return success
 
 
@@ -89,37 +103,37 @@ def download_db():
 @app.route("/download_txt")
 def download_txt():
     # return send_file('coords.txt', as_attachment=True)
-    connection = sqlite3.connect("coords.db")
-    cursor = connection.cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS coordinates(lat REAL, lng REAL)")
-    # asterisk (*) --> everything in the database
-    cursor.execute("SELECT * FROM coordinates")
-    results = cursor.fetchall()  # list of tuple(lat, lng)
+    # connection = sqlite3.connect("coords.db")
+    # cursor = connection.cursor()
+    # cursor.execute("CREATE TABLE IF NOT EXISTS coordinates(lat REAL, lng REAL)")
+    # # asterisk (*) --> everything in the database
+    # cursor.execute("SELECT * FROM coordinates")
+    # results = cursor.fetchall()  # list of tuple(lat, lng)
 
-    # Write the coordinates to a text file. I could've looped over and written line by line but this is faster I think
-    coords_to_string = "\n".join(map(lambda i: str(i[0]) + ", " + str(i[1]), results))
-    file = open("node-positions.txt", "w+")  # open (create) a writable file
-    file.write(f"Latitude, Longitude\n{coords_to_string}")  # write to the file
-    file.close()
+    # # Write the coordinates to a text file. I could've looped over and written line by line but this is faster I think
+    # coords_to_string = "\n".join(map(lambda i: str(i[0]) + ", " + str(i[1]), results))
+    # file = open("node-positions.txt", "w+")  # open (create) a writable file
+    # file.write(f"Latitude, Longitude\n{coords_to_string}")  # write to the file
+    # file.close()
 
     return send_file("node-positions.txt", as_attachment=True)
 
 
 @app.route("/download_csv")
 def download_csv():
-    connection = sqlite3.connect("coords.db")
-    cursor = connection.cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS coordinates(lat REAL, lng REAL)")
-    # asterisk (*) --> everything in the database
-    cursor.execute("SELECT * FROM coordinates")
-    results = cursor.fetchall()  # list of tuple(lat, lng)
+    # # connection = sqlite3.connect("coords.db")
+    # cursor = connection.cursor()
+    # cursor.execute("CREATE TABLE IF NOT EXISTS coordinates(lat REAL, lng REAL)")
+    # # asterisk (*) --> everything in the database
+    # cursor.execute("SELECT * FROM coordinates")
+    # results = cursor.fetchall()  # list of tuple(lat, lng)
 
-    with open("node-positions.csv", "w") as f:
-        writer = csv.writer(f, lineterminator="\n")
-        # If you try to write a string, every character will be a different column. List -> every index is a column
-        writer.writerow(["Latitude", "Longitude"])
-        for tup in results:
-            writer.writerow(tup)
+    # with open("node-positions.csv", "w") as f:
+    #     writer = csv.writer(f, lineterminator="\n")
+    #     # If you try to write a string, every character will be a different column. List -> every index is a column
+    #     writer.writerow(["Latitude", "Longitude"])
+    #     for tup in results:
+    #         writer.writerow(tup)
 
     return send_file("node-positions.csv", as_attachment=True)
 
@@ -148,21 +162,21 @@ def save_topology(data: dict):
     polygon = Polygon(polygon_coordinates, polygon_area, polygon_ndensity)
     topology = Topology(topology_id, ue_list, enb_list, polygon)
 
-    connection = sqlite3.connect("topologies.db")
+    # connection = sqlite3.connect("topologies.db")
     cursor = connection.cursor()
     create_table = """CREATE TABLE IF NOT EXISTS topologies(
-            id TEXT PRIMARY KEY, 
+            id VARCHAR(255) PRIMARY KEY, 
             topology LONGBLOB)"""  # LONGBLOB -> up to 4gb
     cursor.execute(create_table)
 
-    check_id = "SELECT id FROM topologies WHERE id=( ? )"
+    check_id = "SELECT id FROM topologies WHERE id=%s"
     cursor.execute(check_id, (topology_id,))  # prepared statements -> no SQL injection
     entry = cursor.fetchall()
     if bool(entry):  # list not empty --> database found existing ID
         return "ID already taken"  # return the error msg
 
     print("Inserting into database")
-    insert = "INSERT INTO topologies (id, topology) VALUES (?, ?)"
+    insert = "INSERT INTO topologies (id, topology) VALUES (%s, %s)"
     cursor.execute(insert, (topology_id, topology.toJson()))
     connection.commit()  # save changes
 
@@ -182,20 +196,23 @@ def req_load_topology_data():
     entry = load_topology(topology_id)
     if entry == None:
         return make_response(("ID does not exist", 404))  # 404 NOT FOUND
+
+    # print("***************************************", type(entry["topology"]))
+    entry["topology"] = entry["topology"].decode()  # for some reason topology was bytes?
     return json.dumps(entry)
 
 
 def load_topology(topology_id: str):  # return entry w/ given ID from database
     # table name = database name (not required, just simpler)
-    connection = sqlite3.connect("topologies.db")
+    # connection = sqlite3.connect("topologies.db")
     cursor = connection.cursor()
 
     create_table = """CREATE TABLE IF NOT EXISTS topologies(
-        id TEXT PRIMARY KEY, 
+        id VARCHAR(255) PRIMARY KEY, 
         topology LONGBLOB)"""  # LONGBLOB -> up to 4gb
     cursor.execute(create_table)
 
-    check_id = "SELECT * FROM topologies WHERE id=( ? )"
+    check_id = "SELECT * FROM topologies WHERE id=%s"
     cursor.execute(check_id, (topology_id,))  # prepared statements -> no SQL injection
     entry = cursor.fetchall()
     if bool(entry):  # entry found
@@ -207,10 +224,10 @@ def load_topology(topology_id: str):  # return entry w/ given ID from database
 
 @app.route("/tabulate_topologies", methods=["GET", "POST"])
 def tabulate_topologies():
-    connection = sqlite3.connect("topologies.db")
+    # connection = sqlite3.connect("topologies.db")
     cursor = connection.cursor()
     cursor.execute(
-        "CREATE TABLE IF NOT EXISTS topologies(id TEXT PRIMARY KEY, topology LONGBLOB)"
+        "CREATE TABLE IF NOT EXISTS topologies(id VARCHAR(255) PRIMARY KEY, topology LONGBLOB)"
     )
     cursor.execute("SELECT * FROM topologies")
     results = cursor.fetchall()
@@ -263,11 +280,11 @@ def generate_table(results: List[Tuple]) -> str:
 
 
 def print_topology_db():  # call this to print the topologies database
-    connection = sqlite3.connect("topologies.db")
+    # connection = sqlite3.connect("topologies.db")
     cursor = connection.cursor()
 
     create_table = """CREATE TABLE IF NOT EXISTS topologies(
-        id TEXT PRIMARY KEY, 
+        id VARCHAR(255) PRIMARY KEY, 
         topology LONGBLOB)"""
     cursor.execute(create_table)
 
