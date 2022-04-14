@@ -23,13 +23,13 @@ from flaskext.mysql import MySQL  # for MySQL conversion
 
 app = Flask(__name__)
 # app.secret_key = 'asdjp12319c0asdklanc'
-
+# mysql://bf40c7d1cf4912:97282e7e@us-cdbr-east-05.cleardb.net/heroku_295912fa9fe00a3?reconnect=true
 # for MySQL conversion
 mysql = MySQL()
-app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'cse312homework'
-app.config['MYSQL_DATABASE_DB'] = 'cse312_database'
-app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+app.config['MYSQL_DATABASE_USER'] = 'bf40c7d1cf4912'
+app.config['MYSQL_DATABASE_PASSWORD'] = '97282e7e'
+app.config['MYSQL_DATABASE_DB'] = 'heroku_295912fa9fe00a3'
+app.config['MYSQL_DATABASE_HOST'] = 'us-cdbr-east-05.cleardb.net'
 mysql.init_app(app)
 connection = mysql.connect()
 # cursor = connection.cursor()
