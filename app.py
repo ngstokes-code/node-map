@@ -164,10 +164,10 @@ def save_topology(data: dict):
 
     # connection = sqlite3.connect("topologies.db")
     cursor = connection.cursor()
-    create_table = """CREATE TABLE IF NOT EXISTS topologies(
-            id VARCHAR(255) PRIMARY KEY, 
-            topology LONGBLOB)"""  # LONGBLOB -> up to 4gb
-    cursor.execute(create_table)
+    # create_table = """CREATE TABLE IF NOT EXISTS topologies(
+    #         id VARCHAR(255) PRIMARY KEY, 
+    #         topology LONGBLOB)"""  # LONGBLOB -> up to 4gb
+    # cursor.execute(create_table)
 
     check_id = "SELECT id FROM topologies WHERE id=%s"
     cursor.execute(check_id, (topology_id,))  # prepared statements -> no SQL injection
@@ -207,10 +207,10 @@ def load_topology(topology_id: str):  # return entry w/ given ID from database
     # connection = sqlite3.connect("topologies.db")
     cursor = connection.cursor()
 
-    create_table = """CREATE TABLE IF NOT EXISTS topologies(
-        id VARCHAR(255) PRIMARY KEY, 
-        topology LONGBLOB)"""  # LONGBLOB -> up to 4gb
-    cursor.execute(create_table)
+    # create_table = """CREATE TABLE IF NOT EXISTS topologies(
+    #     id VARCHAR(255) PRIMARY KEY, 
+    #     topology LONGBLOB)"""  # LONGBLOB -> up to 4gb
+    # cursor.execute(create_table)
 
     check_id = "SELECT * FROM topologies WHERE id=%s"
     cursor.execute(check_id, (topology_id,))  # prepared statements -> no SQL injection
@@ -226,9 +226,9 @@ def load_topology(topology_id: str):  # return entry w/ given ID from database
 def tabulate_topologies():
     # connection = sqlite3.connect("topologies.db")
     cursor = connection.cursor()
-    cursor.execute(
-        "CREATE TABLE IF NOT EXISTS topologies(id VARCHAR(255) PRIMARY KEY, topology LONGBLOB)"
-    )
+    # cursor.execute(
+    #     "CREATE TABLE IF NOT EXISTS topologies(id VARCHAR(255) PRIMARY KEY, topology LONGBLOB)"
+    # )
     cursor.execute("SELECT * FROM topologies")
     results = cursor.fetchall()
     topology_summaries = generate_table(results)
@@ -283,10 +283,10 @@ def print_topology_db():  # call this to print the topologies database
     # connection = sqlite3.connect("topologies.db")
     cursor = connection.cursor()
 
-    create_table = """CREATE TABLE IF NOT EXISTS topologies(
-        id VARCHAR(255) PRIMARY KEY, 
-        topology LONGBLOB)"""
-    cursor.execute(create_table)
+    # create_table = """CREATE TABLE IF NOT EXISTS topologies(
+    #     id VARCHAR(255) PRIMARY KEY, 
+    #     topology LONGBLOB)"""
+    # cursor.execute(create_table)
 
     cursor.execute("SELECT * FROM topologies")
     results = cursor.fetchall()
